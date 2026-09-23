@@ -1,0 +1,1421 @@
+
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Monitoring Lossis Harian</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" >
+  <script src="/toast.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+
+    body {
+      background: #f5f5f5;
+    }
+
+    .card {
+      margin-top: 20px;
+    }
+
+    .table {
+      font-size: 14px;
+    }
+
+    .table-responsive {
+      max-height: 600px;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 350px;
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+<div class="container-fluid">
+
+  <div class="card shadow">
+
+    <div class="card-body">
+
+      <h4 class="mb-4">
+        Monitoring Lossis Harian
+      </h4>
+
+
+      <div class="row mb-4">
+
+        <div class="col-md-4">
+
+          <label class="form-label">
+            Pilih Tanggal Proses
+          </label>
+
+          <input type="date" id="tanggal" class="form-control">
+
+        </div>
+
+        <div class="col-md-2 d-flex align-items-end">
+
+          <button class="btn btn-primary w-100" onclick="ambilData()" >
+            Tampilkan
+          </button>
+
+        </div>
+
+         <div class="col-md-2 d-flex align-items-end" id="colBtnInput">
+
+          <button class="btn btn-primary w-100" id="btnInputData" onclick="keHalamanInput()">
+            Input Data
+          </button>
+
+        </div>
+
+      </div>
+
+      <div class="container mt-3">
+  <div class="d-flex justify-content-between align-items-center">
+    <div>
+      <strong id="infoUser">Memuat...</strong>
+    </div>
+
+    <div>
+      <a href="/users.html" class="btn btn-warning btn-sm me-2 d-none" id="btnKelolaUser">
+        Kelola User
+      </a>
+      <button type="button" class="btn btn-outline-danger btn-sm" onclick="logout()" >
+        Logout
+      </button>
+    </div>
+  </div>
+</div>
+
+
+      <div class="row mb-4">
+
+
+        <div class="col-md-3">
+
+          <div class="card shadow-sm">
+
+            <div class="card-body">
+
+              <h6>Data Monitoring</h6>
+
+              <h3 id="jumlahData">0</h3>
+
+              <small>Pengambilan</small>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="col-md-3">
+
+          <div class="card shadow-sm">
+
+            <div class="card-body">
+
+              <h6>Rata-rata Fibre Press</h6>
+
+              <h3 id="avgFP">-</h3>
+
+              <small>Std &lt; 4%</small>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="col-md-3">
+
+          <div class="card shadow-sm">
+
+            <div class="card-body">
+
+              <h6>Rata-rata Bunch Press</h6>
+
+              <h3 id="avgBP">-</h3>
+
+              <small>Std &lt; 1.5%</small>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="col-md-3">
+
+          <div class="card shadow-sm">
+
+            <div class="card-body">
+
+              <div class="d-flex justify-content-between align-items-center">
+
+                <div>
+
+                  <h6>Rata-rata Final FE</h6>
+
+                  <h3 id="avgFE">-</h3>
+
+                  <small>Std &lt; 0.8%</small>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="row mb-4">
+
+        <div class="col-md-3">
+
+          <div class="card shadow-sm">
+
+            <div class="card-body">
+
+              <h6>Rata-rata Solid Decanter</h6>
+
+              <h3 id="avgSolid">-</h3>
+
+              <small>Std &lt; 3%</small>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="card shadow-sm">
+
+        <div class="card-body">
+
+          <h5>
+            Grafik Fibre Press
+          </h5>
+
+          <p class="text-muted">
+            Rata-rata Fibre Press berdasarkan pengambilan
+          </p>
+
+          <div class="chart-container">
+
+            <canvas id="grafikFP"></canvas>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="card shadow-sm">
+
+        <div class="card-body">
+
+          <h5>
+            Grafik Bunch Press
+          </h5>
+
+          <p class="text-muted">
+            Rata-rata Bunch Press berdasarkan pengambilan
+          </p>
+
+          <div class="chart-container">
+
+            <canvas id="grafikBP"></canvas>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="card shadow-sm">
+
+        <div class="card-body">
+
+          <h5>
+            Grafik Final FE
+          </h5>
+
+          <p class="text-muted">
+            Final FE berdasarkan pengambilan
+          </p>
+
+          <div class="chart-container">
+
+            <canvas id="grafikFE"></canvas>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="card shadow-sm">
+
+        <div class="card-body">
+
+          <h5>
+            Grafik Solid Decanter
+          </h5>
+
+          <p class="text-muted">
+            Rata-rata Solid Decanter berdasarkan pengambilan
+          </p>
+
+          <div class="chart-container">
+
+            <canvas id="grafikSolid"></canvas>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="card shadow-sm">
+
+        <div class="card-body">
+
+          <h5 class="mb-3">
+            Rekapan Monitoring
+          </h5>
+
+          <div class="table-responsive">
+
+            <table class="table table-bordered table-striped text-center align-middle" >
+
+              <thead class="table-dark">
+
+                <tr>
+
+                  <th>Pengambilan</th>
+
+                  <th>FP1</th>
+                  <th>FP2</th>
+                  <th>FP3</th>
+                  <th>FP4</th>
+                  <th>FP5</th>
+                  <th>FP6</th>
+
+                  <th>BP1</th>
+                  <th>BP2</th>
+                  <th>BP3</th>
+                  <th>BP4</th>
+
+                  <th>All HP</th>
+
+                  <th>Final FE</th>
+
+                  <th>Solid 1</th>
+                  <th>Solid 2</th>
+                  <th>Solid 3</th>
+
+                </tr>
+
+              </thead>
+
+              <tbody id="tabelData">
+
+                <tr>
+
+                  <td colspan="16">
+                    Belum ada data
+                  </td>
+
+                </tr>
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+
+
+let chartFP = null;
+let chartBP = null;
+let chartFE = null;
+let chartSolid = null;
+
+
+async function ambilData() {
+
+  const tanggal = document.getElementById("tanggal").value;
+
+  if (!tanggal) {
+
+    alert(
+      "Silakan pilih tanggal terlebih dahulu."
+    );
+
+    return;
+
+  }
+
+  try {
+
+    const response = await fetch(`/api/monitoring?tanggal=${tanggal}`);
+
+    const result = await response.json();
+
+    if (result.status !== "success") {
+
+      alert(
+        "Gagal mengambil data."
+      );
+
+      return;
+
+    }
+
+    tampilkanData(result.data);
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      "Tidak dapat terhubung ke server Node.js."
+    );
+
+  }
+
+}
+
+
+function tampilkanData(data) {
+
+  const tabel = document.getElementById("tabelData");
+
+  tabel.innerHTML = "";
+
+  document.getElementById("jumlahData").textContent =
+    data.length;
+
+
+  data.sort(
+    (a, b) =>
+      Number(a.pengambilan) - Number(b.pengambilan)
+  );
+
+
+  if (data.length === 0) {
+
+    tabel.innerHTML = `
+
+      <tr>
+
+        <td colspan="16">
+          Tidak ada data pada tanggal tersebut.
+        </td>
+
+      </tr>
+
+    `;
+
+    document.getElementById("avgFP").textContent =
+      "-";
+
+    document.getElementById("avgBP").textContent =
+      "-";
+
+    document.getElementById("avgFE").textContent =
+      "-";
+
+    document.getElementById("avgSolid").textContent =
+      "-";
+
+    hapusGrafik();
+
+    return;
+
+  }
+
+
+  let totalFP = 0;
+  let jumlahFP = 0;
+
+
+  let totalBP = 0;
+  let jumlahBP = 0;
+
+
+  let totalFE = 0;
+  let jumlahFE = 0;
+
+
+  let totalSolid = 0;
+  let jumlahSolid = 0;
+
+
+  const pengambilan = [];
+
+  const dataFP = [];
+  const dataBP = [];
+  const dataFE = [];
+  const dataSolid = [];
+
+
+  data.forEach(row => {
+
+
+    const fp = [
+
+      row.fp1,
+      row.fp2,
+      row.fp3,
+      row.fp4,
+      row.fp5,
+      row.fp6
+
+    ];
+
+    const fpValid =
+      fp.filter(v =>
+        v !== null &&
+        v !== ""
+      );
+
+    let fpAvg = null;
+
+    if (fpValid.length > 0) {
+
+      fpAvg =
+        fpValid.reduce(
+          (total, value) =>
+            total + Number(value),
+          0
+        ) / fpValid.length;
+
+      fpValid.forEach(value => {
+
+        totalFP +=
+          Number(value);
+
+        jumlahFP++;
+
+      });
+
+    }
+
+
+    const bp = [
+
+      row.bp1,
+      row.bp2,
+      row.bp3,
+      row.bp4
+
+    ];
+
+    const bpValid =
+      bp.filter(v =>
+        v !== null &&
+        v !== ""
+      );
+
+    let bpAvg = null;
+
+    if (bpValid.length > 0) {
+
+      bpAvg =
+        bpValid.reduce(
+          (total, value) =>
+            total + Number(value),
+          0
+        ) / bpValid.length;
+
+      bpValid.forEach(value => {
+
+        totalBP +=
+          Number(value);
+
+        jumlahBP++;
+
+      });
+
+    }
+
+
+    let finalFE = null;
+
+    if (
+      row.finalfe !== null &&
+      row.finalfe !== ""
+    ) {
+
+      finalFE =
+        Number(row.finalfe);
+
+      totalFE +=
+        finalFE;
+
+      jumlahFE++;
+
+    }
+
+
+    const solid = [
+
+      row.solid1,
+      row.solid2,
+      row.solid3
+
+    ];
+
+    const solidValid =
+      solid.filter(v =>
+        v !== null &&
+        v !== ""
+      );
+
+    let solidAvg = null;
+
+    if (solidValid.length > 0) {
+
+      solidAvg =
+        solidValid.reduce(
+          (total, value) =>
+            total + Number(value),
+          0
+        ) / solidValid.length;
+
+      solidValid.forEach(value => {
+
+        totalSolid +=
+          Number(value);
+
+        jumlahSolid++;
+
+      });
+
+    }
+
+
+    pengambilan.push(
+      "Pengambilan " +
+      row.pengambilan
+    );
+
+    dataFP.push(
+
+      fpAvg !== null
+
+        ? Number(
+            fpAvg.toFixed(2)
+          )
+
+        : null
+
+    );
+
+    dataBP.push(
+
+      bpAvg !== null
+
+        ? Number(
+            bpAvg.toFixed(2)
+          )
+
+        : null
+
+    );
+
+    dataFE.push(
+
+      finalFE !== null
+
+        ? Number(
+            finalFE.toFixed(2)
+          )
+
+        : null
+
+    );
+
+    dataSolid.push(
+
+      solidAvg !== null
+
+        ? Number(
+            solidAvg.toFixed(2)
+          )
+
+        : null
+
+    );
+
+
+    tabel.innerHTML += `
+
+      <tr>
+
+        <td>
+          ${row.pengambilan}
+        </td>
+
+        <td>
+          ${row.fp1 ?? "-"}
+        </td>
+
+        <td>
+          ${row.fp2 ?? "-"}
+        </td>
+
+        <td>
+          ${row.fp3 ?? "-"}
+        </td>
+
+        <td>
+          ${row.fp4 ?? "-"}
+        </td>
+
+        <td>
+          ${row.fp5 ?? "-"}
+        </td>
+
+        <td>
+          ${row.fp6 ?? "-"}
+        </td>
+
+        <td>
+          ${row.bp1 ?? "-"}
+        </td>
+
+        <td>
+          ${row.bp2 ?? "-"}
+        </td>
+
+        <td>
+          ${row.bp3 ?? "-"}
+        </td>
+
+        <td>
+          ${row.bp4 ?? "-"}
+        </td>
+
+        <td>
+          ${row.allhp ?? "-"}
+        </td>
+
+        <td>
+          ${row.finalfe ?? "-"}
+        </td>
+
+        <td>
+          ${row.solid1 ?? "-"}
+        </td>
+
+        <td>
+          ${row.solid2 ?? "-"}
+        </td>
+
+        <td>
+          ${row.solid3 ?? "-"}
+        </td>
+
+      </tr>
+
+    `;
+
+  });
+
+
+  document.getElementById("avgFP").textContent =
+
+    jumlahFP > 0
+
+      ? (
+          totalFP /
+          jumlahFP
+        ).toFixed(2) + "%"
+
+      : "-";
+
+
+  document.getElementById("avgBP").textContent =
+
+    jumlahBP > 0
+
+      ? (
+          totalBP /
+          jumlahBP
+        ).toFixed(2) + "%"
+
+      : "-";
+
+
+  document.getElementById("avgFE").textContent =
+
+    jumlahFE > 0
+
+      ? (
+          totalFE /
+          jumlahFE
+        ).toFixed(2) + "%"
+
+      : "-";
+
+
+  document.getElementById("avgSolid").textContent =
+
+    jumlahSolid > 0
+
+      ? (
+          totalSolid /
+          jumlahSolid
+        ).toFixed(2) + "%"
+
+      : "-";
+
+
+  buatGrafikFP(
+    pengambilan,
+    dataFP
+  );
+
+  buatGrafikBP(
+    pengambilan,
+    dataBP
+  );
+
+  buatGrafikFE(
+    pengambilan,
+    dataFE
+  );
+
+  buatGrafikSolid(
+    pengambilan,
+    dataSolid
+  );
+
+}
+
+
+function buatGrafikFP(
+  pengambilan,
+  data
+) {
+
+  if (chartFP) {
+
+    chartFP.destroy();
+
+  }
+
+  const ctx =
+    document.getElementById(
+      "grafikFP"
+    );
+
+  chartFP = new Chart(
+    ctx,
+    {
+
+      type: "line",
+
+      data: {
+
+        labels: pengambilan,
+
+        datasets: [
+
+          {
+
+            label:
+              "Rata-rata Fibre Press",
+
+            data: data,
+
+            borderWidth: 3,
+
+            tension: 0.3,
+
+            spanGaps: true
+
+          },
+
+          {
+
+            label:
+              "Standar 4%",
+
+            data:
+              pengambilan.map(
+                () => 4
+              ),
+
+            borderWidth: 2,
+
+            borderDash: [
+              8,
+              5
+            ],
+
+            pointRadius: 0
+
+          }
+
+        ]
+
+      },
+
+      options: {
+
+        responsive: true,
+
+        maintainAspectRatio: false,
+
+        scales: {
+
+          y: {
+
+            title: {
+
+              display: true,
+
+              text:
+                "Persentase (%)"
+
+            }
+
+          },
+
+          x: {
+
+            title: {
+
+              display: true,
+
+              text:
+                "Pengambilan"
+
+            }
+
+          }
+
+        }
+
+      }
+
+    }
+
+  );
+
+}
+
+
+function buatGrafikBP(
+  pengambilan,
+  data
+) {
+
+  if (chartBP) {
+
+    chartBP.destroy();
+
+  }
+
+  const ctx =
+    document.getElementById(
+      "grafikBP"
+    );
+
+  chartBP = new Chart(
+    ctx,
+    {
+
+      type: "line",
+
+      data: {
+
+        labels: pengambilan,
+
+        datasets: [
+
+          {
+
+            label:
+              "Rata-rata Bunch Press",
+
+            data: data,
+
+            borderWidth: 3,
+
+            tension: 0.3,
+
+            spanGaps: true
+
+          },
+
+          {
+
+            label:
+              "Standar 1.5%",
+
+            data:
+              pengambilan.map(
+                () => 1.5
+              ),
+
+            borderWidth: 2,
+
+            borderDash: [
+              8,
+              5
+            ],
+
+            pointRadius: 0
+
+          }
+
+        ]
+
+      },
+
+      options: {
+
+        responsive: true,
+
+        maintainAspectRatio: false,
+
+        scales: {
+
+          y: {
+
+            title: {
+
+              display: true,
+
+              text:
+                "Persentase (%)"
+
+            }
+
+          },
+
+          x: {
+
+            title: {
+
+              display: true,
+
+              text:
+                "Pengambilan"
+
+            }
+
+          }
+
+        }
+
+      }
+
+    }
+
+  );
+
+}
+
+
+function buatGrafikFE(
+  pengambilan,
+  data
+) {
+
+  if (chartFE) {
+
+    chartFE.destroy();
+
+  }
+
+  const ctx =
+    document.getElementById(
+      "grafikFE"
+    );
+
+  chartFE = new Chart(
+    ctx,
+    {
+
+      type: "line",
+
+      data: {
+
+        labels: pengambilan,
+
+        datasets: [
+
+          {
+
+            label:
+              "Final FE",
+
+            data: data,
+
+            borderWidth: 3,
+
+            tension: 0.3,
+
+            spanGaps: true
+
+          },
+
+          {
+
+            label:
+              "Standar 0.8%",
+
+            data:
+              pengambilan.map(
+                () => 0.8
+              ),
+
+            borderWidth: 2,
+
+            borderDash: [
+              8,
+              5
+            ],
+
+            pointRadius: 0
+
+          }
+
+        ]
+
+      },
+
+      options: {
+
+        responsive: true,
+
+        maintainAspectRatio: false,
+
+        scales: {
+
+          y: {
+
+            title: {
+
+              display: true,
+
+              text:
+                "Persentase (%)"
+
+            }
+
+          },
+
+          x: {
+
+            title: {
+
+              display: true,
+
+              text:
+                "Pengambilan"
+
+            }
+
+          }
+
+        }
+
+      }
+
+    }
+
+  );
+
+}
+
+
+function buatGrafikSolid(
+  pengambilan,
+  data
+) {
+
+  if (chartSolid) {
+
+    chartSolid.destroy();
+
+  }
+
+  const ctx =
+    document.getElementById(
+      "grafikSolid"
+    );
+
+  chartSolid = new Chart(
+    ctx,
+    {
+
+      type: "line",
+
+      data: {
+
+        labels: pengambilan,
+
+        datasets: [
+
+          {
+
+            label:
+              "Rata-rata Solid Decanter",
+
+            data: data,
+
+            borderWidth: 3,
+
+            tension: 0.3,
+
+            spanGaps: true
+
+          },
+
+          {
+
+            label:
+              "Standar 3%",
+
+            data:
+              pengambilan.map(
+                () => 3
+              ),
+
+            borderWidth: 2,
+
+            borderDash: [
+              8,
+              5
+            ],
+
+            pointRadius: 0
+
+          }
+
+        ]
+
+      },
+
+      options: {
+
+        responsive: true,
+
+        maintainAspectRatio: false,
+
+        scales: {
+
+          y: {
+
+            title: {
+
+              display: true,
+
+              text:
+                "Persentase (%)"
+
+            }
+
+          },
+
+          x: {
+
+            title: {
+
+              display: true,
+
+              text:
+                "Pengambilan"
+
+            }
+
+          }
+
+        }
+
+      }
+
+    }
+
+  );
+
+}
+
+
+function hapusGrafik() {
+
+  if (chartFP) {
+
+    chartFP.destroy();
+
+    chartFP = null;
+
+  }
+
+  if (chartBP) {
+
+    chartBP.destroy();
+
+    chartBP = null;
+
+  }
+
+  if (chartFE) {
+
+    chartFE.destroy();
+
+    chartFE = null;
+
+  }
+
+  if (chartSolid) {
+
+    chartSolid.destroy();
+
+    chartSolid = null;
+
+  }
+
+}
+
+
+const hariIni =
+  new Date()
+    .toISOString()
+    .split("T")[0];
+
+document.getElementById(
+  "tanggal"
+).value =
+  hariIni;
+
+</script>
+
+<script>
+let currentUser = null;
+
+function keHalamanInput() {
+  if (currentUser && currentUser.role === "operator") {
+    showToast("Akses ditolak: Peran Operator tidak memiliki izin untuk menginput data.", "danger");
+    return;
+  }
+  window.location.href = "/index.html";
+}
+
+async function cekLogin() {
+  try {
+    const response = await fetch("/api/me");
+
+    if (!response.ok) {
+      window.location.href = "/login.html";
+      return;
+    }
+
+    const result = await response.json();
+    currentUser = result.user;
+
+    document.getElementById("infoUser").textContent =
+      `${currentUser.username} (${currentUser.role})`;
+
+    if (currentUser.role === "operator") {
+      const btnInput = document.getElementById("btnInputData");
+      if (btnInput) {
+        btnInput.className = "btn btn-outline-secondary w-100";
+        btnInput.textContent = "Input Data";
+        btnInput.title = "Akses khusus Analis dan Admin";
+      }
+    }
+
+    const btnKelolaUser = document.getElementById("btnKelolaUser");
+    if (btnKelolaUser) {
+      if (currentUser.role === "admin") {
+        btnKelolaUser.className = "btn btn-warning btn-sm me-2";
+        btnKelolaUser.href = "/users.html";
+        btnKelolaUser.onclick = null;
+        btnKelolaUser.classList.remove("d-none");
+      } else {
+        btnKelolaUser.className = "btn btn-outline-secondary btn-sm me-2";
+        btnKelolaUser.removeAttribute("href");
+        btnKelolaUser.textContent = "Kelola User";
+        btnKelolaUser.onclick = () => {
+          showToast("Akses ditolak: Menu Kelola User hanya untuk Administrator.", "danger");
+        };
+        btnKelolaUser.classList.remove("d-none");
+      }
+    }
+
+  } catch (error) {
+    console.error(error);
+    window.location.href = "/login.html";
+  }
+}
+
+async function logout() {
+  try {
+    const response = await fetch("/api/logout", {
+      method: "POST"
+    });
+
+    if (response.ok) {
+      window.location.href = "/login.html";
+    }
+
+  } catch (error) {
+    console.error(error);
+    alert("Gagal logout");
+  }
+}
+
+cekLogin();
+</script>
+
+</body>
+
+</html>

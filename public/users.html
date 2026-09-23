@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manajemen Pengguna - Monitoring PKS</title>
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  >
+  <script src="/toast.js"></script>
+  <style>
+    body {
+      background: #f4f6f9;
+      min-height: 100vh;
+    }
+    .card {
+      border: none;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+    .badge-admin {
+      background-color: #dc3545;
+    }
+    .badge-analis {
+      background-color: #0d6efd;
+    }
+    .badge-operator {
+      background-color: #198754;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="/laporan.html">Monitoring PKS</a>
+      
+      <div class="d-flex align-items-center gap-2">
+        <a href="/laporan.html" class="btn btn-outline-light btn-sm">Laporan</a>
+        <a href="/index.html" class="btn btn-outline-light btn-sm">Input Lab</a>
+        <span class="text-white-50 ms-2 me-1" id="navUserInfo">Admin</span>
+        <button class="btn btn-danger btn-sm" onclick="logout()">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container py-4">
+    <div class="row">
+      <div class="col-lg-4 mb-4">
+        <div class="card p-4">
+          <h5 class="fw-bold mb-3">Tambah Pengguna Baru</h5>
+          <form id="formUser">
+            <div class="mb-3">
+              <label for="username" class="form-label">Username</label>
+              <input
+                type="text"
+                class="form-control"
+                id="username"
+                placeholder="Contoh: analis_shift1"
+                required
+                autocomplete="off"
+              >
+              <small class="text-muted">Minimal 3 karakter tanpa spasi.</small>
+            </div>
+
+            <div class="mb-3">
+              <label for="password" class="form-label">Password</label>
+              <input
+                type="password"
+                class="form-control"
+                id="password"
+                placeholder="Minimal 6 karakter"
+                required
+                autocomplete="new-password"
+              >
+            </div>
+
+            <div class="mb-3">
+              <label for="role" class="form-label">Peran (Role)</label>
+              <select class="form-select" id="role" required>
+                <option value="analis" selected>Analis (Input Lab & Laporan)</option>
+                <option value="operator">Operator (Hanya Lihat Laporan)</option>
+                <option value="admin">Admin (Kelola User & Semua Akses)</option>
+              </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100" id="btnSubmit">
+              Simpan Pengguna
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div class="col-lg-8">
+        <div class="card p-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0">Daftar Pengguna Terdaftar</h5>
+            <button class="btn btn-outline-secondary btn-sm" onclick="muatUsers()">
+              Muat Ulang
+            </button>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th style="width: 50px;">No</th>
+                  <th>Username</th>
+                  <th>Role</th>
+                  <th>Dibuat Pada</th>
+                  <th style="width: 100px;" class="text-center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="tabelUsersBody">
+                <tr>
+                  <td colspan="5" class="text-center py-4 text-muted">Memuat data pengguna...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentAdminId = null;
+
+    function showAlert(pesan, tipe = "success") {
+      showToast(pesan, tipe);
+    }
+
+    async function cekAksesAdmin() {
+      try {
+        const response = await fetch("/api/me");
+        if (!response.ok) {
+          window.location.href = "/login.html";
+          return;
+        }
+
+        const result = await response.json();
+        const user = result.user;
+
+        if (user.role !== "admin") {
+          redirectWithToast("/laporan.html", "Akses ditolak: Menu Kelola User hanya untuk Administrator.", "danger");
+          return;
+        }
+
+        currentAdminId = user.id;
+        document.getElementById("navUserInfo").textContent = `${user.username} (${user.role})`;
+
+        muatUsers();
+      } catch (error) {
+        console.error(error);
+        window.location.href = "/login.html";
+      }
+    }
+
+    async function muatUsers() {
+      const tbody = document.getElementById("tabelUsersBody");
+      try {
+        const response = await fetch("/api/users");
+        const result = await response.json();
+
+        if (result.status !== "success") {
+          tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">${result.message}</td></tr>`;
+          return;
+        }
+
+        const users = result.data;
+        if (users.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">Belum ada pengguna.</td></tr>`;
+          return;
+        }
+
+        let html = "";
+        users.forEach((u, index) => {
+          let badgeClass = "badge-operator";
+          if (u.role === "admin") badgeClass = "badge-admin";
+          else if (u.role === "analis") badgeClass = "badge-analis";
+
+          const tanggalDibuat = u.created_at ? new Date(u.created_at).toLocaleString("id-ID") : "-";
+
+          const isSelf = u.id === currentAdminId;
+          const deleteBtn = isSelf
+            ? `<span class="badge bg-secondary">Akun Anda</span>`
+            : `<button class="btn btn-outline-danger btn-sm" onclick="hapusUser(${u.id}, '${u.username}')">Hapus</button>`;
+
+          html += `
+            <tr>
+              <td>${index + 1}</td>
+              <td class="fw-semibold">${u.username}</td>
+              <td><span class="badge ${badgeClass}">${u.role.toUpperCase()}</span></td>
+              <td class="small text-muted">${tanggalDibuat}</td>
+              <td class="text-center">${deleteBtn}</td>
+            </tr>
+          `;
+        });
+
+        tbody.innerHTML = html;
+      } catch (error) {
+        console.error("Error muat user:", error);
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Gagal memuat pengguna dari server</td></tr>`;
+      }
+    }
+
+    document.getElementById("formUser").addEventListener("submit", async function(e) {
+      e.preventDefault();
+
+      const btnSubmit = document.getElementById("btnSubmit");
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value;
+      const role = document.getElementById("role").value;
+
+      btnSubmit.disabled = true;
+      btnSubmit.textContent = "Menyimpan...";
+
+      try {
+        const response = await fetch("/api/users", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password, role })
+        });
+
+        const result = await response.json();
+
+        if (result.status === "success") {
+          showAlert(result.message, "success");
+          document.getElementById("formUser").reset();
+          muatUsers();
+        } else {
+          showAlert(result.message || "Gagal membuat user", "danger");
+        }
+      } catch (error) {
+        console.error(error);
+        showAlert("Tidak dapat terhubung ke server", "danger");
+      } finally {
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = "Simpan Pengguna";
+      }
+    });
+
+    async function hapusUser(id, username) {
+      if (!confirm(`Apakah Anda yakin ingin menghapus akun '${username}'?`)) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/users/${id}`, {
+          method: "DELETE"
+        });
+
+        const result = await response.json();
+
+        if (result.status === "success") {
+          showAlert(result.message, "success");
+          muatUsers();
+        } else {
+          showAlert(result.message || "Gagal menghapus user", "danger");
+        }
+      } catch (error) {
+        console.error(error);
+        showAlert("Tidak dapat terhubung ke server", "danger");
+      }
+    }
+
+    async function logout() {
+      try {
+        const response = await fetch("/api/logout", { method: "POST" });
+        if (response.ok) {
+          window.location.href = "/login.html";
+        }
+      } catch (error) {
+        console.error(error);
+        alert("Gagal logout");
+      }
+    }
+
+    cekAksesAdmin();
+  </script>
+</body>
+</html>

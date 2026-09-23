@@ -1,0 +1,535 @@
+
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>LAPORAN HASIL ANALISA LOSSIS PER PENGAMBILAN</title>
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <script src="/toast.js"></script>
+
+    <style>
+      body {
+        background: #f5f5f5;
+      }
+
+      .card {
+        margin-top: 20px;
+      }
+
+      textarea {
+        height: 650px;
+        font-family: monospace;
+      }
+
+      h4 {
+        margin-bottom: 20px;
+      }
+    </style>
+  </head>
+
+  <body>
+<div class="container mt-3">
+  <div class="d-flex justify-content-between align-items-center">
+    
+    <div>
+      <strong id="infoUser">Memuat...</strong>
+    </div>
+
+    <div>
+      <a href="/laporan.html" class="btn btn-outline-primary btn-sm me-2">Laporan</a>
+      <a href="/users.html" class="btn btn-warning btn-sm me-2 d-none" id="btnKelolaUser">Kelola User</a>
+      <button
+        type="button"
+        class="btn btn-outline-danger btn-sm"
+        onclick="logout()"
+      >
+        Logout
+      </button>
+    </div>
+
+  </div>
+</div>
+
+    <div class="container">
+      <div class="card shadow">
+        <div class="card-body">
+          <h4>Generator Pesan WhatsApp Laboratorium PKS</h4>
+
+          <div class="row">
+            <div class="col-md-6">
+
+              <div class="mb-3">
+                <label>Salam</label>
+                <select id="salam" class="form-control">
+                  <option>Pagi</option>
+                  <option>Siang</option>
+                  <option>Sore</option>
+                  <option selected>Malam</option>
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label>Tanggal Proses</label>
+                <input
+                  type="date"
+                  id="tanggal"
+                  class="form-control"
+                  required
+                />
+              </div>
+
+              <div class="mb-3">
+                <label>Pengambilan Ke-</label>
+                <input
+                  type="number"
+                  id="pengambilan"
+                  class="form-control"
+                  placeholder="1"
+                  min="1"
+                />
+              </div>
+
+              <hr />
+
+              <h5>Fibre Press</h5>
+
+              <div class="row">
+                <div class="col-6">
+                  <input
+                  type="number"
+                    id="fp1"
+                    class="form-control mb-2"
+                    placeholder="No.1"
+                  />
+                </div>
+
+                <div class="col-6">
+                  <input
+                  type="number"
+                    id="fp2"
+                    class="form-control mb-2"
+                    placeholder="No.2"
+                  />
+                </div>
+
+                <div class="col-6">
+                  <input
+                  type="number"
+                    id="fp3"
+                    class="form-control mb-2"
+                    placeholder="No.3"
+                  />
+                </div>
+
+                <div class="col-6">
+                  <input
+                  type="number"
+                    id="fp4"
+                    class="form-control mb-2"
+                    placeholder="No.4"
+                  />
+                </div>
+
+                <div class="col-6">
+                  <input
+                  type="number"
+                    id="fp5"
+                    class="form-control mb-2"
+                    placeholder="No.5"
+                  />
+                </div>
+
+                <div class="col-6">
+                  <input
+                  type="number"
+                    id="fp6"
+                    class="form-control mb-2"
+                    placeholder="No.6"
+                  />
+                </div>
+              </div>
+
+              <hr />
+
+              <h5>Bunch Press</h5>
+
+              <input id="bp1" type="number" class="form-control mb-2" placeholder="No.1" />
+              <input id="bp2" type="number" class="form-control mb-2" placeholder="No.2" />
+              <input id="bp3" type="number" class="form-control mb-2" placeholder="No.3" />
+              <input id="bp4" type="number" class="form-control mb-2" placeholder="No.4" />
+
+              <hr />
+
+              <input
+                id="allhp"
+                type="number"
+                class="form-control mb-2"
+                placeholder="All HP"
+              />
+
+              <input
+                id="finalfe"
+                type="number"
+                class="form-control mb-2"
+                placeholder="Final FE"
+              />
+
+              <hr />
+
+              <h5>Solid Decanter</h5>
+
+              <input
+                id="solid1"
+                type="number"
+                class="form-control mb-2"
+                placeholder="Solid 1"
+              />
+
+              <input
+                id="solid2"
+                type="number"
+                class="form-control mb-2"
+                placeholder="Solid 2"
+              />
+
+              <input
+                id="solid3"
+                type="number"
+                class="form-control mb-2"
+                placeholder="Solid 3"
+              />
+
+              <hr />
+
+              <h5>CPO Produksi V1</h5>
+
+              <input
+                id="v1ffa"
+                type="number"
+                class="form-control mb-2"
+                placeholder="FFA"
+              />
+
+              <input
+                id="v1moist"
+                type="number"
+                class="form-control mb-2"
+                placeholder="Moist"
+              />
+
+              <input
+                id="v1dobi"
+                type="number"
+                class="form-control mb-2"
+                placeholder="DOBI"
+              />
+
+              <hr />
+
+              <h5>CPO Produksi V2</h5>
+
+              <input
+                id="v2ffa"
+                type="number"
+                class="form-control mb-2"
+                placeholder="FFA"
+              />
+
+              <input
+                id="v2moist"
+                type="number"
+                class="form-control mb-2"
+                placeholder="Moist"
+              />
+
+              <input
+                id="v2dobi"
+                type="number"
+                class="form-control mb-2"
+                placeholder="DOBI"
+              />
+
+              <br />
+
+              <button class="btn btn-success" onclick="buatPesan()">
+                Buat Pesan
+              </button>
+
+              <button class="btn btn-success" onclick="wa()">
+                WhatsApp
+              </button>
+
+              <button class="btn btn-primary" onclick="salin()">
+                Salin
+              </button>
+
+              <button class="btn btn-warning" onclick="simpan()">
+                Simpan
+              </button>
+
+              <a href="laporan.html" class="btn btn-success">
+                monitoring
+              </a>
+            </div>
+
+            <div class="col-md-6">
+              <textarea id="hasil" class="form-control"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function v(id) {
+        return document.getElementById(id).value;
+      }
+
+      function formatTanggalIndonesia(tglString) {
+        if (!tglString) return "";
+        const namaBulan = [
+          "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+          "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+        ];
+        const bagian = tglString.split("-");
+        if (bagian.length !== 3) return tglString;
+        const tahun = bagian[0];
+        const bulanIndex = parseInt(bagian[1], 10) - 1;
+        const hari = parseInt(bagian[2], 10);
+        return `${hari} ${namaBulan[bulanIndex]} ${tahun}`;
+      }
+
+      function buatPesan() {
+        const tanggalStr = formatTanggalIndonesia(v("tanggal"));
+        let pesan = `Selamat ${v("salam")}
+
+Berikut monitoring mutu & Lossis PKS Satui
+${tanggalStr}
+
+*Pengambilan ke-${v("pengambilan")}*
+
+*1. Fibre Press (Std <4 %)*
+No.1 : *${v("fp1")} %*
+No.2 : *${v("fp2")} %*
+No.3 : *${v("fp3")} %*
+No.4 : *${v("fp4")} %*
+No.5 : *${v("fp5")} %*
+No.6 : *${v("fp6")} %*
+Note :
+
+*2. Bunch Press (Std <1.5 %)*
+No.1 : *${v("bp1")} %*
+No.2 : *${v("bp2")} %*
+No.3 : *${v("bp3")} %*
+No.4 : *${v("bp4")} %*
+Note :
+
+*3. All HP : ${v("allhp")} %*
+Note :
+
+*4. Final FE : ${v("finalfe")} % (Std <0.8 %)* 
+Note :
+
+*5. Solid Decanter*
+Solid 1 : *${v("solid1")} %*
+Solid 2 : *${v("solid2")} %*
+Solid 3 : *${v("solid3")} %*
+Note :
+
+*6. CPO Produksi V1*
+FFA : *${v("v1ffa")} % (Std <5%)*
+Moist : *${v("v1moist")} % (Std <0.150%)*
+DOBI : *${v("v1dobi")} (Std >2)*
+Note :
+
+*7. CPO Produksi V2*
+FFA : *${v("v2ffa")} % (Std <5%)*
+Moist : *${v("v2moist")} % (Std <0.150%)*
+DOBI : *${v("v2dobi")} (Std >2)*
+Note :
+
+*Terima kasih.*`;
+
+        document.getElementById("hasil").value = pesan;
+      }
+
+      async function simpan() {
+        const tanggal = v("tanggal");
+
+        if (!tanggal) {
+          showToast("Pilih tanggal proses terlebih dahulu.", "warning");
+          return;
+        }
+
+        const pengambilan = v("pengambilan");
+
+        if (!pengambilan || Number(pengambilan) < 1) {
+          showToast("Masukkan nomor pengambilan (minimal 1).", "warning");
+          return;
+        }
+
+        const data = {
+          tanggal: tanggal,
+          pengambilan: pengambilan,
+          salam: v("salam"),
+
+          fp1: v("fp1"),
+          fp2: v("fp2"),
+          fp3: v("fp3"),
+          fp4: v("fp4"),
+          fp5: v("fp5"),
+          fp6: v("fp6"),
+
+          bp1: v("bp1"),
+          bp2: v("bp2"),
+          bp3: v("bp3"),
+          bp4: v("bp4"),
+
+          allhp: v("allhp"),
+          finalfe: v("finalfe"),
+
+          solid1: v("solid1"),
+          solid2: v("solid2"),
+          solid3: v("solid3"),
+
+          v1ffa: v("v1ffa"),
+          v1moist: v("v1moist"),
+          v1dobi: v("v1dobi"),
+
+          v2ffa: v("v2ffa"),
+          v2moist: v("v2moist"),
+          v2dobi: v("v2dobi")
+        };
+
+        try {
+          const response = await fetch("/api/monitoring", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+          });
+
+          const result = await response.json();
+
+          if (response.status === 403) {
+            showToast("Akses ditolak: Hanya Analis dan Admin yang dapat menyimpan data.", "danger");
+            return;
+          }
+
+          if (result.status === "success") {
+            showToast("Data berhasil disimpan ke database (ID: " + result.id + ")", "success");
+          } else {
+            showToast(result.message || "Data gagal disimpan", "danger");
+          }
+
+        } catch (error) {
+          console.error(error);
+          showToast("Tidak dapat terhubung ke server Node.js.", "danger");
+        }
+      }
+
+      function salin() {
+        navigator.clipboard.writeText(
+          document.getElementById("hasil").value
+        );
+
+        showToast("Pesan laporan berhasil disalin", "info");
+      }
+
+      function wa() {
+        let text = encodeURIComponent(
+          document.getElementById("hasil").value
+        );
+
+        window.open("https://wa.me/?text=" + text);
+      }
+    </script>
+
+    <script>
+async function cekRoleInput() {
+  try {
+    const response = await fetch("/api/me");
+
+    if (!response.ok) {
+      window.location.href = "/login.html";
+      return;
+    }
+
+    const result = await response.json();
+    const user = result.user;
+
+    console.log("Login sebagai:", user.username, user.role);
+
+    // Operator tidak boleh menggunakan halaman input
+    if (user.role === "operator") {
+      redirectWithToast("/laporan.html", "Akses ditolak: Halaman Input Lab hanya untuk Analis dan Admin.", "danger");
+      return;
+    }
+
+    if (infoUser) {
+      infoUser.textContent =
+        `${user.username} (${user.role})`;
+    }
+
+    const btnKelolaUser = document.getElementById("btnKelolaUser");
+    if (btnKelolaUser) {
+      if (user.role === "admin") {
+        btnKelolaUser.className = "btn btn-warning btn-sm me-2";
+        btnKelolaUser.href = "/users.html";
+        btnKelolaUser.onclick = null;
+        btnKelolaUser.classList.remove("d-none");
+      } else {
+        btnKelolaUser.className = "btn btn-outline-secondary btn-sm me-2";
+        btnKelolaUser.removeAttribute("href");
+        btnKelolaUser.textContent = "Kelola User";
+        btnKelolaUser.onclick = () => {
+          showToast("Akses ditolak: Menu Kelola User hanya untuk Administrator.", "danger");
+        };
+        btnKelolaUser.classList.remove("d-none");
+      }
+    }
+
+  } catch (error) {
+    console.error(error);
+    window.location.href = "/login.html";
+  }
+}
+
+async function logout() {
+  try {
+    const response = await fetch("/api/logout", {
+      method: "POST"
+    });
+
+    if (response.ok) {
+      window.location.href = "/login.html";
+    } else {
+      alert("Gagal logout");
+    }
+
+  } catch (error) {
+    console.error(error);
+    alert("Tidak dapat terhubung ke server");
+  }
+}
+
+cekRoleInput();
+
+const inputTanggal = document.getElementById("tanggal");
+if (inputTanggal && !inputTanggal.value) {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  inputTanggal.value = `${year}-${month}-${day}`;
+}
+</script>
+  </body>
+</html>
