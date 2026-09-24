@@ -341,6 +341,160 @@ app.get("/api/monitoring", harusLogin, async (req, res) => {
   }
 });
 
+app.get("/api/monitoring/:id", harusLogin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [rows] = await db.execute(
+      `
+      SELECT m.*, u.username as input_oleh
+      FROM monitoring m
+      LEFT JOIN users u ON m.user_id = u.id
+      WHERE m.id = ?
+      `,
+      [id]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({
+        status: "error",
+        message: "Data monitoring tidak ditemukan",
+      });
+    }
+
+    res.json({
+      status: "success",
+      data: rows[0],
+    });
+  } catch (error) {
+    console.error("Error get single monitoring:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Gagal mengambil data monitoring",
+    });
+  }
+});
+
+app.put("/api/monitoring/:id", harusAnalis, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const data = req.body;
+    const userId = req.session && req.session.user ? req.session.user.id : null;
+
+    if (!data.tanggal || !data.pengambilan) {
+      return res.status(400).json({
+        status: "error",
+        message: "Tanggal dan nomor pengambilan wajib diisi",
+      });
+    }
+
+    const [existing] = await db.execute("SELECT id FROM monitoring WHERE id = ?", [id]);
+    if (existing.length === 0) {
+      return res.status(404).json({
+        status: "error",
+        message: "Data yang ingin diubah tidak ditemukan",
+      });
+    }
+
+    const sql = `
+      UPDATE monitoring SET
+        user_id = COALESCE(?, user_id),
+        tanggal = ?,
+        pengambilan = ?,
+        salam = ?,
+
+        fp1 = ?, fp2 = ?, fp3 = ?, fp4 = ?, fp5 = ?, fp6 = ?,
+        bp1 = ?, bp2 = ?, bp3 = ?, bp4 = ?,
+        allhp = ?, finalfe = ?,
+        solid1 = ?, solid2 = ?, solid3 = ?,
+        v1ffa = ?, v1moist = ?, v1dobi = ?,
+        v2ffa = ?, v2moist = ?, v2dobi = ?
+      WHERE id = ?
+    `;
+
+    const values = [
+      userId,
+      data.tanggal,
+      data.pengambilan,
+      data.salam || "Malam",
+
+      n(data.fp1),
+      n(data.fp2),
+      n(data.fp3),
+      n(data.fp4),
+      n(data.fp5),
+      n(data.fp6),
+
+      n(data.bp1),
+      n(data.bp2),
+      n(data.bp3),
+      n(data.bp4),
+
+      n(data.allhp),
+      n(data.finalfe),
+
+      n(data.solid1),
+      n(data.solid2),
+      n(data.solid3),
+
+      n(data.v1ffa),
+      n(data.v1moist),
+      n(data.v1dobi),
+
+      n(data.v2ffa),
+      n(data.v2moist),
+      n(data.v2dobi),
+
+      id
+    ];
+
+    await db.execute(sql, values);
+
+    res.json({
+      status: "success",
+      message: "Data monitoring berhasil diperbarui",
+    });
+  } catch (error) {
+    console.error("Error update monitoring:", error);
+
+    if (error.code === "ER_DUP_ENTRY") {
+      return res.status(409).json({
+        status: "error",
+        message: `Sudah ada data lain untuk tanggal ${req.body.tanggal} pengambilan ke-${req.body.pengambilan}.`,
+      });
+    }
+
+    res.status(500).json({
+      status: "error",
+      message: "Gagal memperbarui data monitoring",
+    });
+  }
+});
+
+app.delete("/api/monitoring/:id", harusAnalis, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [result] = await db.execute("DELETE FROM monitoring WHERE id = ?", [id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        status: "error",
+        message: "Data monitoring tidak ditemukan",
+      });
+    }
+
+    res.json({
+      status: "success",
+      message: "Data monitoring berhasil dihapus",
+    });
+  } catch (error) {
+    console.error("Error delete monitoring:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Gagal menghapus data monitoring",
+    });
+  }
+});
+
 app.get("/api/users", harusAdmin, async (req, res) => {
   try {
     const [rows] = await db.execute(

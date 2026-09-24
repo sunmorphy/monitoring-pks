@@ -57,6 +57,13 @@
 </div>
 
     <div class="container">
+      <div id="bannerEditMode" class="alert alert-warning d-none d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <strong>Mode Edit Data:</strong> <span id="infoEditMode">Memuat data...</span>
+        </div>
+        <a href="/index.html" class="btn btn-outline-dark btn-sm">Batal / Input Baru</a>
+      </div>
+
       <div class="card shadow">
         <div class="card-body">
           <h4>Generator Pesan WhatsApp Laboratorium PKS</h4>
@@ -269,7 +276,7 @@
                 Salin
               </button>
 
-              <button class="btn btn-warning" onclick="simpan()">
+              <button class="btn btn-warning" id="btnSimpan" onclick="simpan()">
                 Simpan
               </button>
 
@@ -359,6 +366,8 @@ Note :
         document.getElementById("hasil").value = pesan;
       }
 
+      let editModeId = null;
+
       async function simpan() {
         const tanggal = v("tanggal");
 
@@ -407,9 +416,12 @@ Note :
           v2dobi: v("v2dobi")
         };
 
+        const method = editModeId ? "PUT" : "POST";
+        const url = editModeId ? `/api/monitoring/${editModeId}` : "/api/monitoring";
+
         try {
-          const response = await fetch("/api/monitoring", {
-            method: "POST",
+          const response = await fetch(url, {
+            method: method,
             headers: {
               "Content-Type": "application/json"
             },
@@ -424,7 +436,16 @@ Note :
           }
 
           if (result.status === "success") {
-            showToast("Data berhasil disimpan ke database (ID: " + result.id + ")", "success");
+            const pesanSukses = editModeId
+              ? "Data pengambilan ke-" + pengambilan + " berhasil diperbarui."
+              : "Data berhasil disimpan ke database (ID: " + result.id + ")";
+            showToast(pesanSukses, "success");
+
+            if (editModeId) {
+              setTimeout(() => {
+                window.location.href = "/laporan.html";
+              }, 1200);
+            }
           } else {
             showToast(result.message || "Data gagal disimpan", "danger");
           }
@@ -520,7 +541,65 @@ async function logout() {
   }
 }
 
+async function cekModeEdit() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const editId = urlParams.get("edit");
+  if (!editId) return;
+
+  try {
+    const response = await fetch(`/api/monitoring/${editId}`);
+    const result = await response.json();
+
+    if (result.status !== "success" || !result.data) {
+      showToast(result.message || "Data monitoring tidak ditemukan", "danger");
+      return;
+    }
+
+    const d = result.data;
+    editModeId = d.id;
+
+    if (d.tanggal) document.getElementById("tanggal").value = d.tanggal.split("T")[0];
+    if (d.pengambilan) document.getElementById("pengambilan").value = d.pengambilan;
+    if (d.salam) document.getElementById("salam").value = d.salam;
+
+    const fields = [
+      "fp1", "fp2", "fp3", "fp4", "fp5", "fp6",
+      "bp1", "bp2", "bp3", "bp4",
+      "allhp", "finalfe",
+      "solid1", "solid2", "solid3",
+      "v1ffa", "v1moist", "v1dobi",
+      "v2ffa", "v2moist", "v2dobi"
+    ];
+
+    fields.forEach(f => {
+      const el = document.getElementById(f);
+      if (el && d[f] !== null && d[f] !== undefined) {
+        el.value = d[f];
+      }
+    });
+
+    buatPesan();
+
+    const banner = document.getElementById("bannerEditMode");
+    const info = document.getElementById("infoEditMode");
+    if (banner && info) {
+      info.textContent = `Mengubah data Pengambilan ke-${d.pengambilan} (Tanggal: ${d.tanggal.split("T")[0]}).`;
+      banner.classList.remove("d-none");
+    }
+
+    const btnSimpan = document.getElementById("btnSimpan");
+    if (btnSimpan) {
+      btnSimpan.textContent = "Simpan Perubahan";
+      btnSimpan.className = "btn btn-primary";
+    }
+  } catch (error) {
+    console.error(error);
+    showToast("Gagal memuat data untuk diedit", "danger");
+  }
+}
+
 cekRoleInput();
+cekModeEdit();
 
 const inputTanggal = document.getElementById("tanggal");
 if (inputTanggal && !inputTanggal.value) {

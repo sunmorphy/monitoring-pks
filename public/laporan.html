@@ -11,6 +11,7 @@
   <title>Monitoring Lossis Harian</title>
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" >
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="/toast.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -343,6 +344,7 @@
                   <th>Solid 1</th>
                   <th>Solid 2</th>
                   <th>Solid 3</th>
+                  <th class="text-center" style="min-width: 120px;">Aksi</th>
 
                 </tr>
 
@@ -352,7 +354,7 @@
 
                 <tr>
 
-                  <td colspan="16">
+                  <td colspan="17">
                     Belum ada data
                   </td>
 
@@ -450,7 +452,7 @@ function tampilkanData(data) {
 
       <tr>
 
-        <td colspan="16">
+        <td colspan="17">
           Tidak ada data pada tanggal tersebut.
         </td>
 
@@ -691,6 +693,12 @@ function tampilkanData(data) {
     );
 
 
+    const isOperator = currentUser && currentUser.role === "operator";
+    const btnAksiHtml = isOperator
+      ? `<button class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="showToast('Akses ditolak: Peran Operator tidak memiliki izin untuk mengedit data.', 'danger')" title="Akses khusus Analis dan Admin">Edit</button>`
+      : `<button class="btn btn-sm btn-outline-primary py-0 px-2 me-1" onclick="bukaModalEdit(${row.id})" title="Edit data ini">Edit</button>
+         <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="hapusMonitoring(${row.id}, ${row.pengambilan})" title="Hapus data ini">Hapus</button>`;
+
     tabel.innerHTML += `
 
       <tr>
@@ -757,6 +765,10 @@ function tampilkanData(data) {
 
         <td>
           ${row.solid3 ?? "-"}
+        </td>
+
+        <td class="text-center text-nowrap">
+          ${btnAksiHtml}
         </td>
 
       </tr>
@@ -1414,7 +1426,298 @@ async function logout() {
 }
 
 cekLogin();
+
+let editModalInstance = null;
+
+async function bukaModalEdit(id) {
+  try {
+    const res = await fetch(`/api/monitoring/${id}`);
+    const json = await res.json();
+    if (json.status !== "success" || !json.data) {
+      showToast(json.message || "Gagal mengambil data monitoring", "danger");
+      return;
+    }
+    const d = json.data;
+
+    document.getElementById("edit_id").value = d.id;
+    document.getElementById("edit_tanggal").value = d.tanggal ? d.tanggal.split("T")[0] : "";
+    document.getElementById("edit_pengambilan").value = d.pengambilan ?? "";
+    document.getElementById("edit_salam").value = d.salam || "Malam";
+
+    const fields = [
+      "fp1", "fp2", "fp3", "fp4", "fp5", "fp6",
+      "bp1", "bp2", "bp3", "bp4",
+      "allhp", "finalfe",
+      "solid1", "solid2", "solid3",
+      "v1ffa", "v1moist", "v1dobi",
+      "v2ffa", "v2moist", "v2dobi"
+    ];
+
+    fields.forEach(f => {
+      const el = document.getElementById("edit_" + f);
+      if (el) el.value = (d[f] !== null && d[f] !== undefined) ? d[f] : "";
+    });
+
+    const linkLengkap = document.getElementById("btnBukaInputLengkap");
+    if (linkLengkap) {
+      linkLengkap.href = `/index.html?edit=${d.id}`;
+    }
+
+    const modalEl = document.getElementById("modalEdit");
+    if (window.bootstrap && bootstrap.Modal) {
+      editModalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+      editModalInstance.show();
+    } else {
+      modalEl.classList.add("show");
+      modalEl.style.display = "block";
+    }
+  } catch (err) {
+    console.error(err);
+    showToast("Tidak dapat terhubung ke server", "danger");
+  }
+}
+
+function tutupModalEdit() {
+  const modalEl = document.getElementById("modalEdit");
+  if (editModalInstance) {
+    editModalInstance.hide();
+  } else if (modalEl) {
+    modalEl.classList.remove("show");
+    modalEl.style.display = "none";
+  }
+}
+
+async function simpanEditData() {
+  const id = document.getElementById("edit_id").value;
+  const tanggal = document.getElementById("edit_tanggal").value;
+  const pengambilan = document.getElementById("edit_pengambilan").value;
+
+  if (!tanggal) {
+    showToast("Tanggal wajib diisi", "warning");
+    return;
+  }
+  if (!pengambilan || Number(pengambilan) < 1) {
+    showToast("Nomor pengambilan minimal 1", "warning");
+    return;
+  }
+
+  const payload = {
+    tanggal,
+    pengambilan,
+    salam: document.getElementById("edit_salam").value,
+  };
+
+  const fields = [
+    "fp1", "fp2", "fp3", "fp4", "fp5", "fp6",
+    "bp1", "bp2", "bp3", "bp4",
+    "allhp", "finalfe",
+    "solid1", "solid2", "solid3",
+    "v1ffa", "v1moist", "v1dobi",
+    "v2ffa", "v2moist", "v2dobi"
+  ];
+
+  fields.forEach(f => {
+    const el = document.getElementById("edit_" + f);
+    payload[f] = el ? el.value : null;
+  });
+
+  const btnSimpan = document.getElementById("btnSimpanEdit");
+  btnSimpan.disabled = true;
+  btnSimpan.textContent = "Menyimpan...";
+
+  try {
+    const res = await fetch(`/api/monitoring/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const result = await res.json();
+
+    if (result.status === "success") {
+      tutupModalEdit();
+      showToast(result.message || "Data berhasil diperbarui", "success");
+      ambilData();
+    } else {
+      showToast(result.message || "Gagal memperbarui data", "danger");
+    }
+  } catch (err) {
+    console.error(err);
+    showToast("Tidak dapat terhubung ke server", "danger");
+  } finally {
+    btnSimpan.disabled = false;
+    btnSimpan.textContent = "Simpan Perubahan";
+  }
+}
+
+async function hapusMonitoring(id, pengambilan) {
+  if (!confirm(`Apakah Anda yakin ingin menghapus data pengambilan ke-${pengambilan}?`)) {
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/monitoring/${id}`, {
+      method: "DELETE"
+    });
+    const result = await res.json();
+
+    if (result.status === "success") {
+      showToast(result.message || "Data berhasil dihapus", "success");
+      ambilData();
+    } else {
+      showToast(result.message || "Gagal menghapus data", "danger");
+    }
+  } catch (err) {
+    console.error(err);
+    showToast("Tidak dapat terhubung ke server", "danger");
+  }
+}
 </script>
+
+<!-- Modal Edit Data Monitoring -->
+<div class="modal fade" id="modalEdit" tabindex="-1" aria-labelledby="modalEditLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content shadow border-0">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title fw-bold" id="modalEditLabel">Edit Data Monitoring</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" onclick="tutupModalEdit()"></button>
+      </div>
+      <div class="modal-body p-4">
+        <form id="formEdit" onsubmit="event.preventDefault(); simpanEditData();">
+          <input type="hidden" id="edit_id">
+
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label class="form-label fw-semibold small">Tanggal Proses</label>
+              <input type="date" id="edit_tanggal" class="form-control" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold small">Pengambilan Ke-</label>
+              <input type="number" id="edit_pengambilan" class="form-control" min="1" max="24" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold small">Salam / Shift</label>
+              <select id="edit_salam" class="form-select">
+                <option value="Pagi">Pagi</option>
+                <option value="Siang">Siang</option>
+                <option value="Sore">Sore</option>
+                <option value="Malam">Malam</option>
+              </select>
+            </div>
+          </div>
+
+          <h6 class="fw-bold text-primary border-bottom pb-1 mt-3">Fibre Press (FP) - Standar &lt; 4.00%</h6>
+          <div class="row g-2 mb-3">
+            <div class="col-4 col-md-2">
+              <label class="small text-muted">FP 1</label>
+              <input type="number" step="0.01" id="edit_fp1" class="form-control form-control-sm" placeholder="No.1">
+            </div>
+            <div class="col-4 col-md-2">
+              <label class="small text-muted">FP 2</label>
+              <input type="number" step="0.01" id="edit_fp2" class="form-control form-control-sm" placeholder="No.2">
+            </div>
+            <div class="col-4 col-md-2">
+              <label class="small text-muted">FP 3</label>
+              <input type="number" step="0.01" id="edit_fp3" class="form-control form-control-sm" placeholder="No.3">
+            </div>
+            <div class="col-4 col-md-2">
+              <label class="small text-muted">FP 4</label>
+              <input type="number" step="0.01" id="edit_fp4" class="form-control form-control-sm" placeholder="No.4">
+            </div>
+            <div class="col-4 col-md-2">
+              <label class="small text-muted">FP 5</label>
+              <input type="number" step="0.01" id="edit_fp5" class="form-control form-control-sm" placeholder="No.5">
+            </div>
+            <div class="col-4 col-md-2">
+              <label class="small text-muted">FP 6</label>
+              <input type="number" step="0.01" id="edit_fp6" class="form-control form-control-sm" placeholder="No.6">
+            </div>
+          </div>
+
+          <h6 class="fw-bold text-primary border-bottom pb-1 mt-3">Bunch Press (BP) - Standar &lt; 3.50%</h6>
+          <div class="row g-2 mb-3">
+            <div class="col-6 col-md-3">
+              <label class="small text-muted">BP 1</label>
+              <input type="number" step="0.01" id="edit_bp1" class="form-control form-control-sm" placeholder="No.1">
+            </div>
+            <div class="col-6 col-md-3">
+              <label class="small text-muted">BP 2</label>
+              <input type="number" step="0.01" id="edit_bp2" class="form-control form-control-sm" placeholder="No.2">
+            </div>
+            <div class="col-6 col-md-3">
+              <label class="small text-muted">BP 3</label>
+              <input type="number" step="0.01" id="edit_bp3" class="form-control form-control-sm" placeholder="No.3">
+            </div>
+            <div class="col-6 col-md-3">
+              <label class="small text-muted">BP 4</label>
+              <input type="number" step="0.01" id="edit_bp4" class="form-control form-control-sm" placeholder="No.4">
+            </div>
+          </div>
+
+          <h6 class="fw-bold text-primary border-bottom pb-1 mt-3">All HP, Final FE &amp; Solid Decanter</h6>
+          <div class="row g-2 mb-3">
+            <div class="col-6 col-md-3">
+              <label class="small text-muted">All HP</label>
+              <input type="number" step="0.01" id="edit_allhp" class="form-control form-control-sm" placeholder="All HP">
+            </div>
+            <div class="col-6 col-md-3">
+              <label class="small text-muted">Final FE</label>
+              <input type="number" step="0.01" id="edit_finalfe" class="form-control form-control-sm" placeholder="Final FE">
+            </div>
+            <div class="col-4 col-md-2">
+              <label class="small text-muted">Solid 1</label>
+              <input type="number" step="0.01" id="edit_solid1" class="form-control form-control-sm" placeholder="Solid 1">
+            </div>
+            <div class="col-4 col-md-2">
+              <label class="small text-muted">Solid 2</label>
+              <input type="number" step="0.01" id="edit_solid2" class="form-control form-control-sm" placeholder="Solid 2">
+            </div>
+            <div class="col-4 col-md-2">
+              <label class="small text-muted">Solid 3</label>
+              <input type="number" step="0.01" id="edit_solid3" class="form-control form-control-sm" placeholder="Solid 3">
+            </div>
+          </div>
+
+          <h6 class="fw-bold text-primary border-bottom pb-1 mt-3">CPO Produksi (Tangki V1 &amp; V2)</h6>
+          <div class="row g-2 mb-2">
+            <div class="col-4">
+              <label class="small text-muted">V1 FFA (%)</label>
+              <input type="number" step="0.01" id="edit_v1ffa" class="form-control form-control-sm" placeholder="FFA">
+            </div>
+            <div class="col-4">
+              <label class="small text-muted">V1 Moist (%)</label>
+              <input type="number" step="0.001" id="edit_v1moist" class="form-control form-control-sm" placeholder="Moist">
+            </div>
+            <div class="col-4">
+              <label class="small text-muted">V1 DOBI</label>
+              <input type="number" step="0.01" id="edit_v1dobi" class="form-control form-control-sm" placeholder="DOBI">
+            </div>
+          </div>
+          <div class="row g-2 mb-2">
+            <div class="col-4">
+              <label class="small text-muted">V2 FFA (%)</label>
+              <input type="number" step="0.01" id="edit_v2ffa" class="form-control form-control-sm" placeholder="FFA">
+            </div>
+            <div class="col-4">
+              <label class="small text-muted">V2 Moist (%)</label>
+              <input type="number" step="0.001" id="edit_v2moist" class="form-control form-control-sm" placeholder="Moist">
+            </div>
+            <div class="col-4">
+              <label class="small text-muted">V2 DOBI</label>
+              <input type="number" step="0.01" id="edit_v2dobi" class="form-control form-control-sm" placeholder="DOBI">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer d-flex justify-content-between">
+        <a id="btnBukaInputLengkap" href="#" class="btn btn-outline-secondary btn-sm">Buka di Halaman Input Lengkap</a>
+        <div>
+          <button type="button" class="btn btn-secondary btn-sm me-2" onclick="tutupModalEdit()">Batal</button>
+          <button type="button" class="btn btn-primary btn-sm" id="btnSimpanEdit" onclick="simpanEditData()">Simpan Perubahan</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 </body>
 
